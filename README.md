@@ -1,2 +1,2 @@
 # go-typescript
-project to learn how to use go
+project to learn how to use go/ast
