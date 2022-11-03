@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-type TSScanField struct {
+type TSSField struct {
 	Name     string
 	Type     string
 	TsType   string
@@ -15,10 +15,10 @@ type TSScanField struct {
 	DependOn bool
 }
 
-type TSScanStruct struct {
+type TSStruct struct {
 	Name       string
 	Typescript bool
-	Fields     []TSScanField
+	Fields     []TSSField
 }
 
 func isNativeType(t string) bool {
@@ -76,7 +76,7 @@ func getFieldInfo(t ast.Expr) string {
 	case *ast.InterfaceType:
 		result = "interface{}"
 	default:
-		fmt.Println(t)
+		fmt.Printf("this go type: %T is not evaluated!\n", ft)
 	}
 	return result
 }
@@ -97,12 +97,12 @@ func getFieldTsInfo(t ast.Expr) string {
 	case *ast.InterfaceType:
 		result = "unknown"
 	default:
-		fmt.Println(ft)
+		fmt.Printf("this typescript type: %T is not evaluated!\n", ft)
 	}
 	return result
 }
 
-func (s *TSScanStruct) getStruct(ts *ast.TypeSpec) {
+func (s *TSStruct) getStruct(ts *ast.TypeSpec) {
 	if st, ok := ts.Type.(*ast.StructType); ok {
 		for _, field := range st.Fields.List {
 			tag := ""
@@ -116,29 +116,32 @@ func (s *TSScanStruct) getStruct(ts *ast.TypeSpec) {
 				jsonName = tagJson[0]
 			}
 
+			tsType := ""
+
 			if len(field.Names) > 0 {
-				var f = TSScanField{
+				tsType = getFieldTsInfo(field.Type.(ast.Expr))
+				var f = TSSField{
 					Name:     field.Names[0].String(),
 					JsonName: jsonName,
 					Type:     getFieldInfo(field.Type.(ast.Expr)),
-					TsType:   getFieldTsInfo(field.Type.(ast.Expr)),
+					TsType:   tsType,
 					Expand:   strings.Contains(tag, "`ts:\"expand\"`"),
 					DependOn: toBeImported(field.Type.(ast.Expr)),
 				}
 				s.Fields = append(s.Fields, f)
 			} else {
 				if se, ok := field.Type.(*ast.SelectorExpr); ok {
-					var f = TSScanField{
+					var f = TSSField{
 						Name:     fmt.Sprintf("%s.%s", se.X, se.Sel),
 						JsonName: jsonName,
 						Type:     getFieldInfo(field.Type.(ast.Expr)),
-						TsType:   "",
+						TsType:   tsType,
 						Expand:   strings.Contains(tag, "`ts:\"expand\"`"),
 						DependOn: toBeImported(field.Type.(ast.Expr)),
 					}
 					s.Fields = append(s.Fields, f)
 				} else {
-					fmt.Printf("field type %T", field.Type)
+					fmt.Printf("this typescript type: %T is not evaluated!\n", field.Type)
 				}
 			}
 		}
