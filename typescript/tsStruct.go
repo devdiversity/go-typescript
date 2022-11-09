@@ -3,22 +3,23 @@ package typescript
 import (
 	"fmt"
 	"go/ast"
-	"strings"
 )
 
 type TSSField struct {
-	Name     string
-	Type     string
-	TsType   string
-	JsonName string
-	Expand   bool
-	DependOn bool
+	Name       string
+	Type       string
+	TsType     string
+	Json       TSTagJson
+	Ts         TSTagTs
+	DependOn   bool
+	SourceInfo string
 }
 
 type TSStruct struct {
 	Name       string
 	Typescript bool
 	Fields     []TSSField
+	SourceInfo string
 }
 
 func isNativeType(t string) bool {
@@ -102,42 +103,56 @@ func getFieldTsInfo(t ast.Expr) string {
 	return result
 }
 
-func (s *TSStruct) getStruct(ts *ast.TypeSpec) {
+func GetSourceInfo(pos int, src []TSSourceFile) string {
+	for _, v := range src {
+		for _, l := range v.Lines {
+			if pos >= l.Pos && pos <= l.End {
+				return fmt.Sprintf("%s Line: %d", v.Name, l.Line)
+			}
+		}
+	}
+	return ""
+}
+
+func (s *TSStruct) getStruct(ts *ast.TypeSpec, src []TSSourceFile) {
 	if st, ok := ts.Type.(*ast.StructType); ok {
 		for _, field := range st.Fields.List {
+
 			tag := ""
 			if field.Tag != nil {
 				tag = field.Tag.Value
 			}
 
-			jsonName := ""
 			tagJson := TSTagJson{}
-			if ok := tagJson.parse(tag); ok {
-				jsonName = tagJson[0]
-			}
+			tagJson.parse(tag)
+
+			tagTs := TSTagTs{}
+			tagTs.parse(tag)
 
 			tsType := ""
 
 			if len(field.Names) > 0 {
 				tsType = getFieldTsInfo(field.Type.(ast.Expr))
 				var f = TSSField{
-					Name:     field.Names[0].String(),
-					JsonName: jsonName,
-					Type:     getFieldInfo(field.Type.(ast.Expr)),
-					TsType:   tsType,
-					Expand:   strings.Contains(tag, "`ts:\"expand\"`"),
-					DependOn: toBeImported(field.Type.(ast.Expr)),
+					Name:       field.Names[0].String(),
+					Json:       tagJson,
+					Ts:         tagTs,
+					Type:       getFieldInfo(field.Type.(ast.Expr)),
+					TsType:     tsType,
+					DependOn:   toBeImported(field.Type.(ast.Expr)),
+					SourceInfo: GetSourceInfo(int(field.Type.Pos()), src),
 				}
 				s.Fields = append(s.Fields, f)
 			} else {
 				if se, ok := field.Type.(*ast.SelectorExpr); ok {
 					var f = TSSField{
-						Name:     fmt.Sprintf("%s.%s", se.X, se.Sel),
-						JsonName: jsonName,
-						Type:     getFieldInfo(field.Type.(ast.Expr)),
-						TsType:   tsType,
-						Expand:   strings.Contains(tag, "`ts:\"expand\"`"),
-						DependOn: toBeImported(field.Type.(ast.Expr)),
+						Name:       fmt.Sprintf("%s.%s", se.X, se.Sel),
+						Json:       tagJson,
+						Ts:         tagTs,
+						Type:       getFieldInfo(field.Type.(ast.Expr)),
+						TsType:     tsType,
+						DependOn:   toBeImported(field.Type.(ast.Expr)),
+						SourceInfo: GetSourceInfo(int(field.Type.Pos()), src),
 					}
 					s.Fields = append(s.Fields, f)
 				} else {

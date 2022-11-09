@@ -1,11 +1,6 @@
 package typescript
 
-import (
-	"fmt"
-	"go/ast"
-	"strings"
-)
-
+/*
 type TSScanPakage struct {
 	structs map[string]TSStruct
 	types   map[string]TSScanType
@@ -53,103 +48,7 @@ func (ts TSSouces) find(p string, n string) bool {
 	return ts.findType(p, n) || ts.findStruct(p, n)
 }
 
-func GetFieldInfo(t ast.Expr) string {
-	result := ""
-	switch ft := t.(type) {
-	case *ast.Ident:
-		result = ft.Name
-	case *ast.SelectorExpr:
-		se, ok := t.(*ast.SelectorExpr)
-		if ok {
-			result = fmt.Sprintf("%s.%s", se.X, se.Sel)
-		}
-	case *ast.ArrayType:
-		art, ok := t.(*ast.ArrayType)
-		if ok {
-			result = fmt.Sprintf("[]%s", GetFieldInfo(art.Elt))
-		}
-	case *ast.StarExpr:
-		// type Nullable<T> = T | undefined | null;
-		se, ok := t.(*ast.StarExpr)
-		if ok {
-			result = fmt.Sprintf("*%s", GetFieldInfo(se.X))
-		}
-	case *ast.MapType:
-		se, ok := t.(*ast.MapType)
-		if ok {
-			//GetFieldInfo(se.Value.Type )
-			result = fmt.Sprintf("map[%s]%s", se.Key, GetFieldInfo(se.Value))
-		}
-	case *ast.InterfaceType:
-		result = "interface{}"
-	default:
-		fmt.Println(t)
-	}
-	return result
-}
-
-func IsNativeType(t string) bool {
-	switch t {
-	case "uint8", "uint16", "uint32", "uint64", "uint",
-		"int8", "int16", "int32", "int64", "int",
-		"float32", "float64":
-		return true
-	case "bool":
-		return true
-	case "string":
-		return true
-	}
-	return false
-}
-
-func ToBeImported(t ast.Expr) bool {
-	switch ft := t.(type) {
-	case *ast.Ident:
-		return !IsNativeType(ft.Name)
-	case *ast.SelectorExpr:
-		return true
-
-	}
-	return false
-}
-
-func GetFieldTsInfo(t ast.Expr) string {
-	result := ""
-
-	switch ft := t.(type) {
-	case *ast.Ident:
-		result = typeToTypescript(ft.Name)
-	case *ast.SelectorExpr:
-		se, ok := t.(*ast.SelectorExpr)
-		if ok {
-			result = typeToTypescript(fmt.Sprintf("%s.%s", se.X, se.Sel))
-		}
-	case *ast.ArrayType:
-		art, ok := t.(*ast.ArrayType)
-		if ok {
-			result = fmt.Sprintf("%s[]", typeToTypescript(GetFieldTsInfo(art.Elt)))
-		}
-	case *ast.StarExpr:
-		// type Nullable<T> = T | undefined | null;
-		se, ok := t.(*ast.StarExpr)
-		if ok {
-			result = fmt.Sprintf("Nullable<%s>", typeToTypescript(GetFieldTsInfo(se.X)))
-		}
-	case *ast.MapType:
-		se, ok := t.(*ast.MapType)
-		if ok {
-			//GetFieldInfo(se.Value.Type )
-			result = fmt.Sprintf("Record<%s , %s>", typeToTypescript(fmt.Sprintf("%s", se.Key)), typeToTypescript(GetFieldTsInfo(se.Value)))
-		}
-	case *ast.InterfaceType:
-		result = "unknown"
-	default:
-		fmt.Println(t)
-	}
-	return result
-}
-
-func ToTs(tsScan map[string]TSScanPakage, p string, k string) (string, []string) {
+/* func ToTs(tsScan map[string]TSScanPakage, p string, k string) (string, []string) {
 	var result = ""
 	var dependencies = []string{}
 	s := tsScan[p].structs[k]
@@ -229,6 +128,8 @@ func getStructInfo(ts *ast.TypeSpec) string {
 	}
 	return fmt.Sprintf("%s", ts.Name.Name)
 }
+
+*/
 
 /* func ScannAll() {
 	tsScan := TSScan{}

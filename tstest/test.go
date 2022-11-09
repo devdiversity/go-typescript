@@ -2,32 +2,24 @@ package tstest
 
 import (
 	"time"
-
-	testexternal "github.com/devdiversity/go-typescript/tsTestExternal"
+	"typescript/tsTestExternal"
 )
 
-type httpSessions struct {
-	ID         int64
-	Key        string
-	Data       string
-	CreatedOn  time.Time
-	ModifiedOn time.Time
-	ExpiresOn  time.Time
+type HttpSessions struct {
+	ID         int64     `json:"id"`
+	Key        string    `json:"key"`
+	Data       string    `json:"data"`
+	CreatedOn  time.Time `json:"created" ts:"type=Date"`
+	ModifiedOn time.Time `json:"modified" ts:"type=Date"`
+	ExpiresOn  time.Time `json:"expire" ts:"type=Date"`
 }
 
 type TestTest struct {
-	Info  string `json:"info"`
-	Count string
-}
-
-// Typescript: interface
-type HttpSessions struct {
-	ID         int64
-	Key        string
-	Data       string
-	CreatedOn  time.Time
-	ModifiedOn time.Time
-	ExpiresOn  time.Time
+	tsTestExternal.UserRegisterResponse `ts:"expand"`
+	Info                                string `json:"info"`
+	Count                               string
+	TypeName                            string    `json:"typename" ts:"type=MyType"`
+	CreatedOn                           time.Time `json:"created" ts:"type=Date"`
 }
 
 // Typescript: type
@@ -41,25 +33,26 @@ type TestTypeTime time.Time
 
 // Typescript: interface
 type TestStruct1 struct {
-	CreatedOn time.Time    `json:"CreatedOn"`
+	CreatedOn time.Time    `json:"created" ts:"type=Date"`
 	TestT     TestType     `json:"TestT"`
 	Session   HttpSessions `json:"Session"`
 	ID        int64        `json:"id"`
 	Key       []string     `json:"key"`
 	Data      *string      `json:"data"`
 	DataPTR   *[]string
-	UserPswd  testexternal.UserRegisterResponse `json:"newpassword"`
+	UserPswd  tsTestExternal.UserRegisterResponse `json:"newpassword"`
 
-	ModifiedOn time.Time `json:"ModifiedOn"`
+	ModifiedOn time.Time `json:"modified" ts:"type=Date"`
 	ExpiresOn  time.Time `json:"-"`
 
 	MapsArray     []map[string]time.Time
-	Maps          map[string]time.Time         `json:"Maps"`
-	MapsNested    map[string]map[int]string    `json:"MapsNested"`
-	MapsNestedPTR map[string]map[int]*[]string `json:"MapsNestedPtr"`
-	TestTest      TestTest                     `json:"testTest"`
-	TestType      TestType                     `json:"testType"`
-	TestTypeMap   TestTypeMap                  `json:"TestTypeMap"`
+	Maps          map[string]time.Time                 `json:"maps" ts:"type=Date"`
+	MapsNested    map[string]map[int]string            `json:"MapsNested"`
+	MapsNestedPTR map[string]map[int]*[]string         `json:"MapsNestedPtr"`
+	TestTest      TestTest                             `json:"testTest"`
+	TestType      TestType                             `json:"testType"`
+	TestTypeMap   TestTypeMap                          `json:"TestTypeMap"`
+	TestDep       tsTestExternal.UserRegisterResponse2 `json:"testdep"`
 }
 
 // Typescript: type TestTypeStruct
