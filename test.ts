@@ -1,29 +1,10 @@
-type Nullable<T> = T | null;
-type MyType = number
-
-export namespace tsTestExternal {
-  export interface UserRegisterResponse {
-    token: string;
-    user?: string;
-  }
-
-  export interface UserRegisterResponse2 {
-    token: string;
-    user?: string;
-    testdep: tsTestExternal2.TestExternal2;
-  }
-}
-// end namespace tsTestExternal
-
-export namespace tsTestExternal2 {
-  export interface TestExternal2 {
-    token: string;
-    user?: string;
-  }
-}
-// end namespace tsTestExternal2
-
 export namespace tstest {
+  export interface TestTest {
+    info: string;
+    typename: MyType;
+    created: Date;
+  }
+
   export interface TestStruct1 {
     created: Date;
     TestT: TestType;
@@ -40,6 +21,8 @@ export namespace tstest {
     testType: TestType;
     TestTypeMap: TestTypeMap;
     testdep: tsTestExternal.UserRegisterResponse2;
+    direction: Direction;
+    season: Season;
   }
 
   export interface HttpSessions {
@@ -51,14 +34,63 @@ export namespace tstest {
     expire: Date;
   }
 
-  export interface TestTest {
-    info: string;
-    typename: MyType;
-    created: Date;
-  }
+  export type TestTypeMap = Record<string, Record<number, string>>;
+
+  export type Direction = typeof EnumDirection[keyof typeof EnumDirection];
+
+  export type Season = typeof EnumSeason[keyof typeof EnumSeason];
+
+  export type MyType = number;
+
+  export type Nullable<T> = T | null;
+
+  export type TestTypeStruct = TestStruct1;
+
+  export type Test = typeof EnumTest[keyof typeof EnumTest];
 
   export type TestType = number[];
 
-  export type TestTypeMap = Record<string, Record<number, string>>;
+  export const EnumDirection = {
+    North: 0,
+    East: 1,
+    South: 2,
+    West: 3,
+  } as const;
+
+  export const EnumSeason = {
+    Ss: "summer",
+    As: "autumn",
+    Ws: "winter",
+    S2: "spring",
+  } as const;
+
+  export const EnumTest = {
+    A: 0,
+    B: 1,
+    C: 2,
+    D: 3,
+  } as const;
 }
 // end namespace tstest
+
+export namespace tsTestExternal {
+  export interface UserRegisterResponse {
+    token: string;
+    user?: string;
+  }
+
+  export interface UserRegisterResponse2 {
+    token: string;
+    user?: string;
+    testdep: moduleExt.ModuleExtTest;
+  }
+}
+// end namespace tsTestExternal
+
+export namespace moduleExt {
+  export interface ModuleExtTest {
+    token: string;
+    user?: string;
+  }
+}
+// end namespace moduleExt

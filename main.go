@@ -9,7 +9,6 @@ func main() {
 	var tsInfoData = typescript.TSInfo{}
 	var tsSoucesData = typescript.TSSouces{}
 	tsInfoData.Populate()
-	tsSoucesData.New()
 	tsSoucesData.Populate(tsInfoData)
 
 	for _, v := range tsSoucesData.Errors {
@@ -21,6 +20,9 @@ func main() {
 			fmt.Println(v1)
 		}
 		for _, v1 := range tsSoucesData.Pakages[p].Types {
+			fmt.Println(v1)
+		}
+		for _, v1 := range tsSoucesData.Pakages[p].Enums {
 			fmt.Println(v1)
 		}
 		fmt.Printf("}\n// end namespace %s \n\n", p)

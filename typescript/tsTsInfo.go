@@ -9,6 +9,7 @@ import (
 type TSModule struct {
 	Structs map[string]string
 	Types   map[string]string
+	Enums   map[string]string
 }
 
 type TSSouces struct {
@@ -105,6 +106,17 @@ func typeToTs(info TSInfo, p string, k string) (string, []string) {
 	return result, []string{}
 }
 
+func enumToTs(info TSInfo, p string, k string) string {
+	var result = ""
+	s := info.Packages[p].enums[k]
+	result += fmt.Sprintf("export const Enum%s = {\n", s.Name)
+	for _, v := range s.Info {
+		result += fmt.Sprintf("%s: %s,\n", v.Key, v.Value)
+	}
+	result += fmt.Sprintf("} as const\n")
+	return result
+}
+
 func (ts *TSSouces) AddDependencies(info TSInfo, p string, s string, dependencies []string) {
 	if len(dependencies) > 0 {
 		for _, v := range dependencies {
@@ -148,7 +160,10 @@ func (ts *TSSouces) AddDependencies(info TSInfo, p string, s string, dependencie
 }
 
 func (ts *TSSouces) Populate(info TSInfo) {
+	ts.Pakages = make(map[string]TSModule)
+	ts.Errors = []string{}
 	for p, _ := range info.Packages {
+
 		for _, st := range info.Packages[p].structs {
 			if st.Typescript {
 				if len(st.Fields) == 0 {
@@ -159,16 +174,21 @@ func (ts *TSSouces) Populate(info TSInfo) {
 					ts.Errors = append(ts.Errors, err.Error())
 				}
 				if _, ok := ts.Pakages[p]; !ok {
-					ts.Pakages[p] = TSModule{Structs: make(map[string]string), Types: make(map[string]string)}
+					ts.Pakages[p] = TSModule{Structs: make(map[string]string), Types: make(map[string]string), Enums: make(map[string]string)}
 				}
 				ts.Pakages[p].Structs[st.Name] = s
 				ts.AddDependencies(info, p, st.Name, dependencies)
 			}
 		}
-	}
-}
 
-func (ts *TSSouces) New() {
-	ts.Pakages = make(map[string]TSModule)
-	ts.Errors = []string{}
+		for _, e := range info.Packages[p].enums {
+			ts.Pakages[p].Enums[e.Name] = fmt.Sprint(enumToTs(info, p, e.Name))
+		}
+
+		for _, t := range info.Packages[p].types {
+			if t.Typescript {
+				ts.Pakages[p].Types[t.Name] = fmt.Sprintf("export type %s = %s\n", t.Name, t.TsType)
+			}
+		}
+	}
 }

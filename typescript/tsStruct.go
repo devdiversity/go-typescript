@@ -1,8 +1,11 @@
 package typescript
 
 import (
+	"errors"
 	"fmt"
 	"go/ast"
+
+	"github.com/northwood-labs/golang-utils/exiterrorf"
 )
 
 type TSSField struct {
@@ -77,7 +80,7 @@ func getFieldInfo(t ast.Expr) string {
 	case *ast.InterfaceType:
 		result = "interface{}"
 	default:
-		fmt.Printf("this go type: %T is not evaluated!\n", ft)
+		exiterrorf.ExitErrorf(errors.New(fmt.Sprintf("this go type: %T is not evaluated!\n", ft)))
 	}
 	return result
 }
@@ -98,12 +101,12 @@ func getFieldTsInfo(t ast.Expr) string {
 	case *ast.InterfaceType:
 		result = "unknown"
 	default:
-		fmt.Printf("this typescript type: %T is not evaluated!\n", ft)
+		exiterrorf.ExitErrorf(errors.New(fmt.Sprintf("this typescript type: %T is not evaluated!\n", ft)))
 	}
 	return result
 }
 
-func GetSourceInfo(pos int, src []TSSourceFile) string {
+func getSourceInfo(pos int, src []TSSourceFile) string {
 	for _, v := range src {
 		for _, l := range v.Lines {
 			if pos >= l.Pos && pos <= l.End {
@@ -140,7 +143,7 @@ func (s *TSStruct) getStruct(ts *ast.TypeSpec, src []TSSourceFile) {
 					Type:       getFieldInfo(field.Type.(ast.Expr)),
 					TsType:     tsType,
 					DependOn:   toBeImported(field.Type.(ast.Expr)),
-					SourceInfo: GetSourceInfo(int(field.Type.Pos()), src),
+					SourceInfo: getSourceInfo(int(field.Type.Pos()), src),
 				}
 				s.Fields = append(s.Fields, f)
 			} else {
@@ -152,11 +155,11 @@ func (s *TSStruct) getStruct(ts *ast.TypeSpec, src []TSSourceFile) {
 						Type:       getFieldInfo(field.Type.(ast.Expr)),
 						TsType:     tsType,
 						DependOn:   toBeImported(field.Type.(ast.Expr)),
-						SourceInfo: GetSourceInfo(int(field.Type.Pos()), src),
+						SourceInfo: getSourceInfo(int(field.Type.Pos()), src),
 					}
 					s.Fields = append(s.Fields, f)
 				} else {
-					fmt.Printf("this typescript type: %T is not evaluated!\n", field.Type)
+					exiterrorf.ExitErrorf(errors.New(fmt.Sprintf("this typescript type: %T is not evaluated!\n", field.Type)))
 				}
 			}
 		}

@@ -1,0 +1,4 @@
+github.com/northwood-labs/golang-utils/exiterrorf v0.0.0-20220625001840-06ac372e3f35 h1:MVnvWTMyhllwR610DQtldZ6B+Kj0aH/wddUlvHvCS3I=
+github.com/northwood-labs/golang-utils/exiterrorf v0.0.0-20220625001840-06ac372e3f35/go.mod h1:zhcavnHNM0IKzxrlg8+rvhoD2Ec8vBaYHQtrm283Eb4=
+github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
+github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
