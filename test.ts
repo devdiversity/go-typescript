@@ -1,3 +1,12 @@
+// Global Declarations
+export type Record<K extends string | number | symbol, T> = { [P in K]: T };
+
+export type Nullable<T> = T | null;
+
+//
+// namespace tstest
+//
+
 export namespace tstest {
   export interface TestTest {
     info: string;
@@ -34,21 +43,21 @@ export namespace tstest {
     expire: Date;
   }
 
-  export type TestTypeMap = Record<string, Record<number, string>>;
-
-  export type Direction = typeof EnumDirection[keyof typeof EnumDirection];
-
   export type Season = typeof EnumSeason[keyof typeof EnumSeason];
-
-  export type MyType = number;
-
-  export type Nullable<T> = T | null;
-
-  export type TestTypeStruct = TestStruct1;
 
   export type Test = typeof EnumTest[keyof typeof EnumTest];
 
+  export type MyType = number;
+
+  export type TestTypeStruct = TestStruct1;
+
+  export type TestTypeTime = Date;
+
   export type TestType = number[];
+
+  export type TestTypeMap = Record<string, Record<number, string>>;
+
+  export type Direction = typeof EnumDirection[keyof typeof EnumDirection];
 
   export const EnumDirection = {
     North: 0,
@@ -58,10 +67,10 @@ export namespace tstest {
   } as const;
 
   export const EnumSeason = {
-    Ss: "summer",
-    As: "autumn",
-    Ws: "winter",
-    S2: "spring",
+    Summer: "summer",
+    Autumn: "autumn",
+    Winter: "winter",
+    Spring: "spring",
   } as const;
 
   export const EnumTest = {
@@ -70,8 +79,17 @@ export namespace tstest {
     C: 2,
     D: 3,
   } as const;
+
+  export const Timeout = 1000;
+
+  export const Uno = "uno";
+
+  export const Cento = 100;
 }
-// end namespace tstest
+
+//
+// namespace tsTestExternal
+//
 
 export namespace tsTestExternal {
   export interface UserRegisterResponse {
@@ -85,12 +103,14 @@ export namespace tsTestExternal {
     testdep: moduleExt.ModuleExtTest;
   }
 }
-// end namespace tsTestExternal
+
+//
+// namespace moduleExt
+//
 
 export namespace moduleExt {
   export interface ModuleExtTest {
     token: string;
-    user?: string;
+    user?: Nullable<string>;
   }
 }
-// end namespace moduleExt

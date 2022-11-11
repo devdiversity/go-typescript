@@ -5,6 +5,9 @@ import (
 	"typescript/tsTestExternal"
 )
 
+// Typescript: TSDeclaration= Nullable<T> = T | null;
+// Typescript: TSDeclaration= Record<K extends string | number | symbol, T> = { [P in K]: T; }
+
 type HttpSessions struct {
 	ID         int64     `json:"id"`
 	Key        string    `json:"key"`
@@ -24,13 +27,14 @@ type TestTest struct {
 
 // Typescript: TStype=  MyType = number
 
-// Typescript: TStype= Nullable<T> = T | null;
-
 // Typescript: type
 type TestType []int
 
 // Typescript: type
 type TestTypeMap map[string]map[int]string
+
+// Typescript: type=Date
+type TestTypeTime time.Time
 
 // Typescript: interface
 type TestStruct1 struct {
@@ -63,9 +67,18 @@ type TestTypeStruct TestStruct1
 
 type Season string
 
+// Typescript: const
+const Timeout = 1000
+
+// Typescript: const
+const (
+	Uno   string = "uno"
+	Cento int    = 100
+)
+
 // Typescript: enum=Season
 const (
-	Summer string = "summer"
+	Summer Season = "summer"
 	Autumn        = "autumn"
 	Winter        = "winter"
 	Spring        = "spring"

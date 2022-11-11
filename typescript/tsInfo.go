@@ -19,10 +19,32 @@ type TSInfoPakage struct {
 	structs map[string]TSStruct
 	types   map[string]TSType
 	enums   map[string]TSEnum
+	consts  map[string]TSConst
+	decs    map[string]TSDec
+}
+
+type TSDec struct {
+	Name       string
+	Value      string
+	SourceInfo string
+}
+
+type TSType struct {
+	Name       string
+	Type       string
+	TsType     string
+	Typescript bool
+	dependOn   bool
+	SourceInfo string
 }
 
 type TSInfo struct {
 	Packages map[string]TSInfoPakage
+}
+
+type TSConst struct {
+	Name  string
+	Value string
 }
 
 type TSEnum struct {
@@ -86,9 +108,8 @@ func (i *TSInfo) getConst(p string, c *doc.Value, src []TSSourceFile) {
 		command = strings.TrimSpace(command)
 		command = strings.Trim(command, "\n")
 
-		enumName := ""
 		if strings.Contains(command, "enum=") {
-			enumName = strings.TrimPrefix(command, "enum=")
+			enumName := strings.TrimPrefix(command, "enum=")
 			enum := TSEnum{
 				Name: enumName,
 				Info: []TSEnumInfo{},
@@ -138,32 +159,55 @@ func (i *TSInfo) getConst(p string, c *doc.Value, src []TSSourceFile) {
 			i.Packages[p].types[enumName] = t1
 		}
 
+		if strings.Contains(command, "const") {
+			d := c.Decl
+			for _, s := range d.Specs {
+				v := s.(*ast.ValueSpec)
+				if len(v.Names) == 0 || len(v.Values) == 0 {
+					continue
+				}
+				c := TSConst{
+					Name:  v.Names[0].Name,
+					Value: v.Values[0].(*ast.BasicLit).Value,
+				}
+				fmt.Println("const", v.Names, v.Values, c)
+				i.Packages[p].consts[c.Name] = c
+			}
+		}
+
 	}
 }
 
 func (i *TSInfo) getType(p string, t *doc.Type, src []TSSourceFile) {
 	var isTypescript = strings.HasPrefix(t.Doc, "Typescript:")
+	command := ""
+	param := ""
 	if isTypescript {
-
-		command := strings.TrimPrefix(t.Doc, "Typescript:")
+		command = strings.TrimPrefix(t.Doc, "Typescript:")
 		command = strings.TrimSpace(command)
 		command = strings.Trim(command, "\n")
 
-		fmt.Println("Typescript = ", command)
+		if strings.Contains(command, "=") {
+			a := strings.Split(command, "=")
+			if len(a) == 2 {
+				param = a[1]
+			}
+			command = strings.Trim(a[0], " ")
+		}
 	}
 	for _, spec := range t.Decl.Specs {
 		if len(t.Consts) > 0 {
-			fmt.Println(t.Consts[0].Doc)
 			i.getConst(p, t.Consts[0], src)
-
 			continue
 		}
 		switch spec.(type) {
 		case *ast.TypeSpec:
 			typeSpec := spec.(*ast.TypeSpec)
-
 			switch typeSpec.Type.(type) {
 			case *ast.StructType:
+				if isTypescript && command != "interface" {
+					exiterrorf.ExitErrorf(errors.New(fmt.Sprintf("\nMismatch delaration for interface %s AT: %s\n", t.Doc, getSourceInfo(int(typeSpec.Name.NamePos), src))))
+				}
 				v := TSStruct{
 					Name:       typeSpec.Name.Name,
 					Typescript: isTypescript,
@@ -173,11 +217,18 @@ func (i *TSInfo) getType(p string, t *doc.Type, src []TSSourceFile) {
 				v.getStruct(typeSpec, src)
 				i.Packages[p].structs[typeSpec.Name.Name] = v
 			default:
+				if isTypescript && command != "type" {
+					exiterrorf.ExitErrorf(errors.New(fmt.Sprintf("\nMismatch delaration for type %s AT: %s\n", t.Doc, getSourceInfo(int(typeSpec.Name.NamePos), src))))
+				}
+				tsInfo := getFieldTsInfo(typeSpec.Type)
+				if command == "type" && param != "" {
+					tsInfo = param
+				}
 				t := TSType{
 					Name:       typeSpec.Name.Name,
 					Typescript: isTypescript,
 					Type:       getFieldInfo(typeSpec.Type),
-					TsType:     getFieldTsInfo(typeSpec.Type),
+					TsType:     tsInfo,
 					dependOn:   toBeImported(typeSpec.Type.(ast.Expr)),
 					SourceInfo: getSourceInfo(int(typeSpec.Name.NamePos), src),
 				}
@@ -204,7 +255,7 @@ func (i *TSInfo) Populate() {
 
 				for pkg, f := range packages {
 					if _, ok := i.Packages[pkg]; !ok {
-						i.Packages[pkg] = TSInfoPakage{structs: make(map[string]TSStruct), types: make(map[string]TSType), enums: make(map[string]TSEnum)}
+						i.Packages[pkg] = TSInfoPakage{structs: make(map[string]TSStruct), types: make(map[string]TSType), enums: make(map[string]TSEnum), consts: make(map[string]TSConst), decs: make(map[string]TSDec)}
 					}
 
 					var src = []TSSourceFile{}
@@ -241,6 +292,19 @@ func (i *TSInfo) Populate() {
 													SourceInfo: getSourceInfo(int(l.Pos), src),
 												}
 												i.Packages[pkg].types[strings.Trim(a[0], " ")] = t
+											}
+
+										}
+										if strings.Contains(l.Source, "TSDeclaration=") {
+											s := strings.TrimPrefix(l.Source, "// Typescript: TSDeclaration=")
+											a := strings.Split(s, "=")
+											if len(a) == 2 {
+												t := TSDec{
+													Name:       strings.Trim(a[0], " "),
+													Value:      strings.Trim(a[1], " "),
+													SourceInfo: getSourceInfo(int(l.Pos), src),
+												}
+												i.Packages[pkg].decs[strings.Trim(a[0], " ")] = t
 											}
 
 										}
