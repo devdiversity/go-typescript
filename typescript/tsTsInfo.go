@@ -7,11 +7,12 @@ import (
 )
 
 type TSModule struct {
-	Structs map[string]string
-	Types   map[string]string
-	Enums   map[string]string
-	Consts  map[string]string
-	GTypes  map[string]string
+	Structs   map[string]string
+	Types     map[string]string
+	Enums     map[string]string
+	Consts    map[string]string
+	GTypes    map[string]string
+	Endpoints map[string]string
 }
 
 type TSSouces struct {
@@ -183,7 +184,7 @@ func (ts *TSSouces) Populate(info TSInfo) {
 					ts.Errors = append(ts.Errors, err.Error())
 				}
 				if _, ok := ts.Pakages[p]; !ok {
-					ts.Pakages[p] = TSModule{Structs: make(map[string]string), Types: make(map[string]string), Enums: make(map[string]string), Consts: make(map[string]string), GTypes: make(map[string]string)}
+					ts.Pakages[p] = TSModule{Structs: make(map[string]string), Types: make(map[string]string), Enums: make(map[string]string), Consts: make(map[string]string), GTypes: make(map[string]string), Endpoints: make(map[string]string)}
 				}
 				ts.Pakages[p].Structs[st.Name] = s
 				ts.AddDependencies(info, p, st.Name, dependencies)
@@ -206,6 +207,17 @@ func (ts *TSSouces) Populate(info TSInfo) {
 			if t.Typescript {
 				ts.Pakages[p].Types[t.Name] = fmt.Sprintf("export type %s = %s\n", t.Name, t.TsType)
 			}
+		}
+
+		for _, e := range info.Packages[p].endpoints {
+
+			e.VerifyTypes(info, p)
+
+			endpoint := e.ToTs(p)
+			if _, ok := ts.Pakages[p]; !ok {
+				ts.Pakages[p] = TSModule{Structs: make(map[string]string), Types: make(map[string]string), Enums: make(map[string]string), Consts: make(map[string]string), GTypes: make(map[string]string), Endpoints: make(map[string]string)}
+			}
+			ts.Pakages[p].Endpoints[e.Name] = endpoint
 		}
 	}
 }

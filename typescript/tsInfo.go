@@ -16,11 +16,12 @@ import (
 )
 
 type TSInfoPakage struct {
-	structs map[string]TSStruct
-	types   map[string]TSType
-	enums   map[string]TSEnum
-	consts  map[string]TSConst
-	decs    map[string]TSDec
+	structs   map[string]TSStruct
+	types     map[string]TSType
+	enums     map[string]TSEnum
+	consts    map[string]TSConst
+	decs      map[string]TSDec
+	endpoints map[string]TSEndpoint
 }
 
 type TSDec struct {
@@ -255,7 +256,10 @@ func (i *TSInfo) Populate() {
 
 				for pkg, f := range packages {
 					if _, ok := i.Packages[pkg]; !ok {
-						i.Packages[pkg] = TSInfoPakage{structs: make(map[string]TSStruct), types: make(map[string]TSType), enums: make(map[string]TSEnum), consts: make(map[string]TSConst), decs: make(map[string]TSDec)}
+						i.Packages[pkg] = TSInfoPakage{structs: make(map[string]TSStruct), types: make(map[string]TSType), enums: make(map[string]TSEnum), consts: make(map[string]TSConst), decs: make(map[string]TSDec), endpoints: make(map[string]TSEndpoint)}
+					}
+					if pkg == "typescript" {
+						continue
 					}
 
 					var src = []TSSourceFile{}
@@ -280,7 +284,8 @@ func (i *TSInfo) Populate() {
 									if strings.Contains(l.Source, "// Typescript:") {
 
 										if strings.Contains(l.Source, "TStype=") {
-											s := strings.TrimPrefix(l.Source, "// Typescript: TStype=")
+											p := strings.Index(l.Source, "TStype=")
+											s := strings.Trim(l.Source[p+len("TStype="):], " ")
 											a := strings.Split(s, "=")
 											if len(a) == 2 {
 												t := TSType{
@@ -296,7 +301,8 @@ func (i *TSInfo) Populate() {
 
 										}
 										if strings.Contains(l.Source, "TSDeclaration=") {
-											s := strings.TrimPrefix(l.Source, "// Typescript: TSDeclaration=")
+											p := strings.Index(l.Source, "TSDeclaration=")
+											s := strings.Trim(l.Source[p+len("TSDeclaration="):], " ")
 											a := strings.Split(s, "=")
 											if len(a) == 2 {
 												t := TSDec{
@@ -306,8 +312,17 @@ func (i *TSInfo) Populate() {
 												}
 												i.Packages[pkg].decs[strings.Trim(a[0], " ")] = t
 											}
-
 										}
+
+										if strings.Contains(l.Source, "TSEndpoint= ") {
+											e := ParseEndpoint(l.Source, n, l.Line)
+											if _, ok := i.Packages[pkg].endpoints[e.Name]; ok {
+												exiterrorf.ExitErrorf(errors.New(fmt.Sprintf("Enpoint name %s allready in use: %s", e.Name, l.Source)))
+											}
+
+											i.Packages[pkg].endpoints[e.Name] = e
+										}
+
 									}
 								}
 							}
